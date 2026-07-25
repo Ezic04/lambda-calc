@@ -1,0 +1,10 @@
+[package]
+name = "lambda-calc"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+composing = "0.2.0"
+gluon = "0.18.3"
+iced = { version = "0.14.0" }
+sprs = "0.11.4"

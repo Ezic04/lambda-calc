@@ -1,30 +1,15 @@
 use std::{borrow, iter};
 
 use iced::{
-    Element, Event, Length, Pixels, Point, Subscription, event, mouse,
+    Element, Event, Length, Pixels, Subscription, event,
+    mouse::{self, Button},
     widget::{container, scrollable, table, text},
 };
 use sprs::CsMat;
 
-use crate::app::Message;
+use crate::selection::Selection;
 
 use super::{dsl::ExprValue, lmatch};
-
-struct Selection {
-    selection_start: Option<Point>,
-    selection_current: Option<Point>,
-}
-
-enum SelectionMessage {
-    Mouse(mouse::Event),
-}
-
-fn subscription() -> Subscription<SelectionMessage> {
-    event::listen_with(|event, _, _| match event {
-        Event::Mouse(mouse_event) => Some(SelectionMessage::Mouse(mouse_event)),
-        _ => None,
-    })
-}
 
 #[derive(Debug, Clone)]
 pub enum SpreadsheetMessage {
@@ -33,16 +18,19 @@ pub enum SpreadsheetMessage {
         col: usize,
         input: String,
     },
+    Selection(mouse::Event),
 }
 
 pub struct Spreadsheet {
     pub cells_content: CsMat<ExprValue>,
+    selection: Selection,
 }
 
 impl Default for Spreadsheet {
     fn default() -> Self {
         Self {
             cells_content: CsMat::zero((24, 12)),
+            selection: Selection::default(),
         }
     }
 }
@@ -53,10 +41,24 @@ impl Spreadsheet {
             SpreadsheetMessage::ContentChanged { row, col, input } => {
                 self.cells_content.insert(row, col, ExprValue::Str(input));
             }
+            SpreadsheetMessage::Selection(mouse) => {
+                match mouse {
+                    mouse::Event::ButtonPressed(Button::Left) => {
+                        self.selection.set_start();
+                    }
+                    mouse::Event::CursorMoved { position } => {
+                        self.selection.set_move(position);
+                    }
+                    mouse::Event::ButtonReleased(Button::Left) => {
+                        self.selection.set_end();
+                    }
+                    _ => (),
+                };
+            }
         }
     }
 
-    pub fn view(&self) -> Element<'_, Message> {
+    pub fn view(&self) -> Element<'_, SpreadsheetMessage> {
         let fst_row_padding = [6, 10];
         let mk_cell = |row: usize, col: usize| {
             let val_str = self.cells_content.get(row, col).map_or(
@@ -66,7 +68,14 @@ impl Spreadsheet {
                     ExprValue::Str(str) => borrow::Cow::Borrowed(str.as_str()),
                 },
             );
-            text(val_str)
+            let str = match self.selection.get() {
+                Some((start, end)) => {
+                    format!("{start}, {end}")
+                }
+                None => "none".to_string(),
+            };
+            // let w = text(val_str);
+            text(str)
         };
         let fst_col = table::column(text!(""), |r| {
             container(text!("{r}").center().width(Length::Shrink)).padding(fst_row_padding)
@@ -84,5 +93,12 @@ impl Spreadsheet {
         )
         .padding(Pixels::ZERO);
         scrollable(table).height(Length::FillPortion(3)).into()
+    }
+
+    pub fn subscription(&self) -> Subscription<SpreadsheetMessage> {
+        event::listen_with(|event, _, _| match event {
+            Event::Mouse(mouse_event) => Some(SpreadsheetMessage::Selection(mouse_event)),
+            _ => None,
+        })
     }
 }

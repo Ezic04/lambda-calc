@@ -1,6 +1,6 @@
 use iced::{
-    Length, Task,
-    widget::{column, scrollable, text},
+    Length, Subscription, Task,
+    widget::{column, text},
 };
 
 use crate::{
@@ -57,9 +57,12 @@ impl App {
                 .center()
                 .width(Length::Fill)
                 .height(Length::Shrink),
-            self.spreadsheet.view(),
-            self.repl.view()
+            self.spreadsheet.view().map(Message::Spreadsheet),
+            self.repl.view().map(Message::Repl)
         ]
         .into()
+    }
+    pub fn subscription(&self) -> Subscription<Message> {
+        self.spreadsheet.subscription().map(Message::Spreadsheet)
     }
 }

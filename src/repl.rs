@@ -5,8 +5,6 @@ use iced::{
 };
 use std::convert::identity;
 
-use crate::app::Message;
-
 use super::dsl::ExprValue;
 
 #[derive(Debug, Clone)]
@@ -20,14 +18,14 @@ pub struct Repl {
 }
 
 impl Repl {
-    pub fn view(&self) -> iced::Element<'_, Message> {
+    pub fn view(&self) -> iced::Element<'_, ReplMessage> {
         let expr_val_str = self
             .expr_res
             .clone()
             .map_or_else(identity, |v| v.to_string());
         column![
             text_editor(&self.content)
-                .on_action(compose_fn!(Message::Repl, ReplMessage::EditorAction))
+                .on_action(ReplMessage::EditorAction)
                 .placeholder("repl")
                 .height(Length::Fill),
             text!("{expr_val_str}")

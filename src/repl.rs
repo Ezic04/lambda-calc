@@ -1,9 +1,11 @@
-use composing::compose_fn;
+use gluon::RootedThread;
 use iced::{
-    Length,
+    Length, Task,
     widget::{column, text, text_editor},
 };
 use std::convert::identity;
+
+use crate::dsl::eval_expr;
 
 use super::dsl::ExprValue;
 
@@ -38,16 +40,21 @@ impl Repl {
         .into()
     }
 
-    pub fn update(&mut self, repl_message: ReplMessage) {
+    pub fn update(
+        &mut self,
+        repl_message: ReplMessage,
+        vm: RootedThread,
+    ) -> Task<Result<ExprValue, String>> {
         match repl_message {
             ReplMessage::EditorAction(action) => {
                 self.content.perform(action);
             }
         }
+        Task::perform(eval_expr(vm, self.content.text()), identity)
     }
 
-    pub fn content_text(&self) -> String {
-        self.content.text()
+    pub fn on_evaluated(&mut self, expr_res: &Result<ExprValue, String>) {
+        self.expr_res = expr_res.clone();
     }
 }
 

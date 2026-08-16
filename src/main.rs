@@ -2,7 +2,6 @@ mod app;
 mod dsl;
 mod macros;
 mod repl;
-mod selection;
 mod spreadsheet;
 
 use crate::app::App;

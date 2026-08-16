@@ -4,7 +4,7 @@ use iced::{
 };
 
 use crate::{
-    dsl::{ExprValue, eval_expr},
+    dsl::ExprValue,
     repl::{Repl, ReplMessage},
     spreadsheet::{Spreadsheet, SpreadsheetMessage},
 };
@@ -33,19 +33,21 @@ impl Default for App {
 }
 
 impl App {
-    pub fn update(state: &mut Self, message: Message) -> iced::Task<Message> {
+    pub fn update(&mut self, message: Message) -> iced::Task<Message> {
         match message {
             Message::Repl(repl_message) => {
-                state.repl.update(repl_message);
-                return Task::perform(
-                    eval_expr(state.vm.clone(), state.repl.content_text()),
-                    Message::ExprEvaluated,
-                );
+                return self
+                    .repl
+                    .update(repl_message, self.vm.clone())
+                    .map(Message::ExprEvaluated);
             }
             Message::Spreadsheet(spreadsheet_message) => {
-                state.spreadsheet.update(spreadsheet_message);
+                self.spreadsheet.update(spreadsheet_message);
             }
-            Message::ExprEvaluated(expr_res) => state.repl.expr_res = expr_res,
+            Message::ExprEvaluated(expr_res) => {
+                self.repl.on_evaluated(&expr_res);
+                self.spreadsheet.on_evaluated(&expr_res);
+            }
         }
         iced::Task::none()
     }

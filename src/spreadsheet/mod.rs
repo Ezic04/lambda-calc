@@ -18,7 +18,7 @@ pub enum SpreadsheetMessage {
     ContentChanged { index: Index, input: String },
     MouseEvent(mouse::Event),
     EnteredCell(Index),
-    ExitedCell,
+    ExitedCell(Index),
 }
 
 pub struct Spreadsheet {
@@ -46,12 +46,13 @@ impl Spreadsheet {
                 match mouse {
                     mouse::Event::ButtonPressed(Button::Left) => self.selection.on_press(),
                     mouse::Event::ButtonReleased(Button::Left) => self.selection.on_release(),
-                    _ => (),
+                    _ => return,
                 };
             }
             SpreadsheetMessage::EnteredCell(index) => self.selection.on_enter(index),
-            SpreadsheetMessage::ExitedCell => self.selection.on_exit(),
+            SpreadsheetMessage::ExitedCell(index) => self.selection.on_exit(index),
         }
+        eprintln!("{:?}", self.selection);
     }
 
     pub fn view(&self) -> Element<'_, SpreadsheetMessage> {
@@ -73,7 +74,7 @@ impl Spreadsheet {
             let container = container(text).padding(cell_padding);
             mouse_area(container)
                 .on_enter(SpreadsheetMessage::EnteredCell(index))
-                .on_exit(SpreadsheetMessage::ExitedCell)
+                .on_exit(SpreadsheetMessage::ExitedCell(index))
         };
         let fst_col = table::column(text!(""), |row| {
             container(text!("{row}").center().width(Length::Shrink)).padding(cell_padding)

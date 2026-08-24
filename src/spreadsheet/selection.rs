@@ -1,5 +1,6 @@
 use super::index::Index;
 
+#[derive(Debug)]
 pub struct Selection {
     pub start: Index,
     pub end: Index,
@@ -15,8 +16,10 @@ impl Selection {
         }
     }
 
-    pub fn on_exit(&mut self) {
-        self.current = None
+    pub fn on_exit(&mut self, index: Index) {
+        if self.current == Some(index) {
+            self.current = None
+        }
     }
 
     pub fn on_press(&mut self) {

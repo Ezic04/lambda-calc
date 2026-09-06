@@ -27,29 +27,28 @@
             "clippy"
           ];
         };
-        runtimeDeps = [ ];
-        dlopenLibraries = with pkgs; [
+        runtimeDeps = with pkgs; [
           libxkbcommon
           vulkan-loader
           wayland
+          openssl
         ];
       in
       {
-        devShells.default =
-          with pkgs;
-          mkShell {
-            nativeBuildInputs = [
-              pkg-config
-              rustToolchain
-            ];
-            buildInputs = runtimeDeps;
-            LD_LIBRARY_PATH = lib.makeLibraryPath runtimeDeps;
-            shellHook = ''
-              export CARGO_HOME="$PWD/.cargo-local"
-              export PATH="$PWD/.cargo-local/bin:$PATH"
-            '';
-            env.RUSTFLAGS = "-C link-arg=-Wl,-rpath,${nixpkgs.lib.makeLibraryPath dlopenLibraries}";
-          };
+        devShells.default = pkgs.mkShell {
+          nativeBuildInputs = with pkgs; [
+            pkg-config
+            rustToolchain
+          ];
+          buildInputs = runtimeDeps;
+
+          shellHook = ''
+            export CARGO_HOME="$PWD/.cargo-local"
+            export PATH="$CARGO_HOME/bin:$PATH"
+          '';
+
+          env.RUSTFLAGS = "-C link-arg=-Wl,-rpath,${pkgs.lib.makeLibraryPath runtimeDeps}";
+        };
       }
     );
 }

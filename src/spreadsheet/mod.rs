@@ -52,7 +52,7 @@ impl Spreadsheet {
             SpreadsheetMessage::EnteredCell(index) => self.selection.on_enter(index),
             SpreadsheetMessage::ExitedCell(index) => self.selection.on_exit(index),
         }
-        eprintln!("{:?}", self.selection);
+        // eprintln!("{:?}", self.selection);
     }
 
     pub fn view(&self) -> Element<'_, SpreadsheetMessage> {
@@ -65,7 +65,7 @@ impl Spreadsheet {
                     ExprValue::Str(str) => borrow::Cow::Borrowed(str.as_str()),
                 },
             );
-            let color = if index.is_in_range(self.selection.start, self.selection.end) {
+            let color = if self.selection.is_in_range(index) {
                 Color::BLACK
             } else {
                 Color::WHITE
